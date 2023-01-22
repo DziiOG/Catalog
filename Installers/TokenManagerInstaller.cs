@@ -8,7 +8,7 @@ namespace Catalog.Intallers
         {
             services.AddTransient<
                 Catalog.Interfaces.TokenAuthorization.ITokenManager,
-                Catalog.TokenAuthentication.TokenManager
+                Catalog.Services.TokenAuthentication.TokenManager
             >();
         }
     }

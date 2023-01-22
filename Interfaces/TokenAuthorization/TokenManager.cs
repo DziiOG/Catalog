@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Catalog.TokenAuthentication;
 
 namespace Catalog.Interfaces.TokenAuthorization
 {

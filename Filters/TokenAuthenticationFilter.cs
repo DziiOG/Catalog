@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Catalog.Interfaces.TokenAuthorization;
-using Catalog.TokenAuthentication;
+using Catalog.Services.TokenAuthentication;
 using System.Security.Claims;
 
 namespace Catalog.Filters

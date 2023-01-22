@@ -1,4 +1,4 @@
-namespace Catalog.TokenAuthentication
+namespace Catalog.Services.TokenAuthentication
 {
     public class Token
     {

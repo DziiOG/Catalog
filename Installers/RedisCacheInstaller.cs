@@ -1,4 +1,6 @@
 using Catalog.Interfaces.Installers;
+using Catalog.Interfaces.Redis;
+using Catalog.Services.Redis;
 using Catalog.Settings;
 
 namespace Catalog.Intallers
@@ -18,6 +20,8 @@ namespace Catalog.Intallers
             services.AddStackExchangeRedisCache(
                 options => options.Configuration = redisCacheSettings.ConnectionString
             );
+
+            services.AddSingleton<IRedisResponseCache, RedisResponseCache>();
         }
     }
 }

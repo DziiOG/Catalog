@@ -5,7 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using Catalog.Settings;
 
-namespace Catalog.TokenAuthentication
+namespace Catalog.Services.TokenAuthentication
 {
     public class TokenManager : ITokenManager
     {
