@@ -1,5 +1,4 @@
 using Catalog.Interfaces.Repositories;
-using System.Threading.Tasks;
 using Catalog.Models;
 using MongoDB.Driver;
 

@@ -9,46 +9,31 @@ namespace Catalog.Services.Redis
 {
     public class RedisResponseCache : IRedisResponseCache
     {
-        public RedisResponseCache() { }
+        private readonly ConnectionMultiplexer _connectionMultiplexer;
 
-        // public async Task CacheResponseAsync(string cacheKey, object response, TimeSpan duration)
-        // {
-        //     if (response == null)
-        //     {
-        //         return;
-        //     }
-
-        //     string? serializedResponse = JsonConvert.SerializeObject(response);
-
-        //     await _distributedCache.SetStringAsync(
-        //         cacheKey,
-        //         serializedResponse,
-        //         new DistributedCacheEntryOptions() { AbsoluteExpirationRelativeToNow = duration }
-        //     );
-        // }
-
-        // public async Task<string?> GetCachedResponseAsync(string cacheKey)
-        // {
-        //     string? cachedResponse = await _distributedCache.GetStringAsync(cacheKey);
-        //     return string.IsNullOrEmpty(cachedResponse) ? null : cachedResponse;
-        // }
-
-        public async Task<string?> GetCachedUserResponseAsync(string cacheKey)
+        public RedisResponseCache(ConnectionMultiplexer connectionMultiplexer)
         {
-            var _connectionMultiplexer = ConnectionMultiplexer.Connect("localhost");
-            var db = _connectionMultiplexer.GetDatabase();
-            var cachedResponse = await db.StringGetAsync(cacheKey);
-            Console.WriteLine($"I was here {cacheKey}");
-            // var cachedResponse = await _distributedCache.GetStringAsync(cacheKey);
-            if (string.IsNullOrEmpty(cachedResponse))
+            this._connectionMultiplexer = connectionMultiplexer;
+        }
+
+        public async Task CacheResponseAsync(string cacheKey, object response, TimeSpan duration)
+        {
+            if (response == null)
             {
-                Console.WriteLine("Was null");
-                return null;
+                return;
             }
 
-            Console.WriteLine($"got here {cachedResponse}");
-            // string stringResponse = Encoding.Default.GetString(cachedResponse);
-            return string.IsNullOrEmpty("") ? null : "";
+            string? serializedResponse = JsonConvert.SerializeObject(response);
+
+            var db = _connectionMultiplexer.GetDatabase();
+            await db.StringSetAsync(cacheKey, serializedResponse, duration);
+        }
+
+        public async Task<string?> GetCachedResponseAsync(string cacheKey)
+        {
+            var db = _connectionMultiplexer.GetDatabase();
+            string? cachedResponse = await db.StringGetAsync(cacheKey);
+            return string.IsNullOrEmpty(cachedResponse) ? null : cachedResponse;
         }
     }
 }

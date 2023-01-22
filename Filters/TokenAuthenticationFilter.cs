@@ -58,8 +58,9 @@ namespace Catalog.Filters
                                 claimPrinciple = tokenManager.VerifyToken(token);
                                 IRedisResponseCache? cacheService =
                                     context.HttpContext.RequestServices.GetRequiredService<IRedisResponseCache>();
-                                var cachedUserResponse =
-                                    await cacheService.GetCachedUserResponseAsync(token);
+                                var cachedUserResponse = await cacheService.GetCachedResponseAsync(
+                                    token
+                                );
                                 Console.WriteLine("I arrived here");
                                 if (!string.IsNullOrEmpty(cachedUserResponse))
                                 {

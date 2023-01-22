@@ -26,6 +26,7 @@ namespace Catalog.Controllers
 
         // GET /items
         [HttpGet]
+        [RedisCached(duration: 60)]
         public async Task<IEnumerable<ItemDto>> GetItemsAsync()
         {
             IEnumerable<ItemDto>? items = (await repository.GetItemsAsync()).Select(
