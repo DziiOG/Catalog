@@ -2,6 +2,7 @@ using Catalog.Interfaces.Installers;
 using Catalog.Interfaces.Redis;
 using Catalog.Services.Redis;
 using Catalog.Settings;
+using StackExchange.Redis;
 
 namespace Catalog.Intallers
 {
@@ -16,10 +17,14 @@ namespace Catalog.Intallers
             {
                 return;
             }
-
-            services.AddStackExchangeRedisCache(
-                options => options.Configuration = redisCacheSettings.ConnectionString
+            var connectionMultiplexer = ConnectionMultiplexer.Connect(
+                redisCacheSettings.ConnectionString
             );
+            services.AddSingleton(connectionMultiplexer);
+
+            // services.AddStackExchangeRedisCache(
+            //     options => options.Configuration = redisCacheSettings.ConnectionString
+            // );
 
             services.AddSingleton<IRedisResponseCache, RedisResponseCache>();
         }

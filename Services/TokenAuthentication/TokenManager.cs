@@ -74,7 +74,6 @@ namespace Catalog.Services.TokenAuthentication
                 },
                 out SecurityToken validatedToken
             );
-            Console.WriteLine("Passed");
             return claims;
         }
     }
