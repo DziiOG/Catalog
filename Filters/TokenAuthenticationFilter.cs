@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Catalog.Interfaces.TokenAuthorization;
 using Catalog.Services.TokenAuthentication;
 using System.Security.Claims;
@@ -14,8 +11,17 @@ namespace Catalog.Filters
     {
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
-            bool result = true;
+            bool result = await isAuthorized(context);
 
+            if (!result)
+            {
+                context.ModelState.AddModelError("Unauthorized", "Unauthorized access");
+                context.Result = new UnauthorizedObjectResult(context.ModelState);
+            }
+        }
+
+        private static async Task<bool> isAuthorized(AuthorizationFilterContext context)
+        {
             TokenManager? tokenManager = (TokenManager?)
                 context.HttpContext.RequestServices.GetService(typeof(ITokenManager));
 
@@ -24,83 +30,50 @@ namespace Catalog.Filters
             );
             if (!hasAuthorization)
             {
-                result = false;
+                return false;
             }
             string token = string.Empty;
-            if (result)
+            var authorizationString = context.HttpContext.Request.Headers.First(
+                x => x.Key == "Authorization"
+            );
+
+            if (!string.IsNullOrEmpty(authorizationString.Value))
             {
-                var authorizationString = context.HttpContext.Request.Headers.First(
-                    x => x.Key == "Authorization"
+                String auth = authorizationString.Value;
+                String[] spearator = { " " };
+                Int32 count = 2;
+                String[] authArrayItems = auth.Split(
+                    spearator,
+                    count,
+                    StringSplitOptions.RemoveEmptyEntries
                 );
-
-                if (!string.IsNullOrEmpty(authorizationString.Value))
+                if (authArrayItems[0] == "Bearer")
                 {
-                    String auth = authorizationString.Value;
-                    String[] spearator = { " " };
-                    Int32 count = 2;
-
-                    // using the method
-                    String[] authArrayItems = auth.Split(
-                        spearator,
-                        count,
-                        StringSplitOptions.RemoveEmptyEntries
-                    );
-
-                    if (authArrayItems[0] == "Bearer")
+                    ClaimsPrincipal? claimPrinciple;
+                    try
                     {
-                        ClaimsPrincipal? claimPrinciple;
-
-                        if (tokenManager is not null)
+                        token = authArrayItems[1];
+                        claimPrinciple = tokenManager.VerifyToken(token);
+                        IRedisResponseCache? cacheService =
+                            context.HttpContext.RequestServices.GetRequiredService<IRedisResponseCache>();
+                        var cachedUserResponse = await cacheService.GetCachedResponseAsync(token);
+                        if (!string.IsNullOrEmpty(cachedUserResponse))
                         {
-                            try
-                            {
-                                token = authArrayItems[1];
-                                claimPrinciple = tokenManager.VerifyToken(token);
-                                IRedisResponseCache? cacheService =
-                                    context.HttpContext.RequestServices.GetRequiredService<IRedisResponseCache>();
-                                var cachedUserResponse = await cacheService.GetCachedResponseAsync(
-                                    token
-                                );
-                                Console.WriteLine("I arrived here");
-                                if (!string.IsNullOrEmpty(cachedUserResponse))
-                                {
-                                    Console.WriteLine($"user: {cachedUserResponse}");
-                                }
-                                else
-                                {
-                                    result = false;
-                                    context.ModelState.AddModelError("Unauthorized", "");
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                result = false;
-                                context.ModelState.AddModelError("Unauthorized", e.ToString());
-                            }
+                            Console.WriteLine($"user: {cachedUserResponse}");
+                            return true;
                         }
-                        else
-                        {
-                            result = false;
-                            context.ModelState.AddModelError("Unauthorized", "");
-                        }
+                        return false;
                     }
-                    else
+                    catch (Exception e)
                     {
-                        result = false;
-                        context.ModelState.AddModelError("Unauthorized", "");
+                        return false;
                     }
                 }
-                else
-                {
-                    result = false;
-                    context.ModelState.AddModelError("Unauthorized", "");
-                }
+                return false;
             }
-
-            if (!result)
-            {
-                context.Result = new UnauthorizedObjectResult(context.ModelState);
-            }
+            return false;
         }
     }
 }
+
+//
