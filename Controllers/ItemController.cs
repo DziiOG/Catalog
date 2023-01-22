@@ -27,6 +27,7 @@ namespace Catalog.Controllers
         // GET /items
         [HttpGet]
         [RedisCached(duration: 60)]
+        [AccessRestriction(new string[] { "FARMER" })]
         public async Task<IEnumerable<ItemDto>> GetItemsAsync()
         {
             IEnumerable<ItemDto>? items = (await repository.GetItemsAsync()).Select(

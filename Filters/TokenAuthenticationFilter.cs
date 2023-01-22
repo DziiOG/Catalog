@@ -4,6 +4,8 @@ using Catalog.Interfaces.TokenAuthorization;
 using Catalog.Services.TokenAuthentication;
 using System.Security.Claims;
 using Catalog.Interfaces.Redis;
+using Newtonsoft.Json;
+using Catalog.Contracts;
 
 namespace Catalog.Filters
 {
@@ -59,7 +61,10 @@ namespace Catalog.Filters
                         var cachedUserResponse = await cacheService.GetCachedResponseAsync(token);
                         if (!string.IsNullOrEmpty(cachedUserResponse))
                         {
-                            Console.WriteLine($"user: {cachedUserResponse}");
+                            var userInfo = JsonConvert.DeserializeObject<UserInfo>(
+                                cachedUserResponse
+                            );
+                            context.HttpContext.Items.Add("LoggedInUser", userInfo);
                             return true;
                         }
                         return false;
