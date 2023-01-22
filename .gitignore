@@ -75,3 +75,8 @@ _[Ss]cripts
 *.dot[Cc]over
 
 .env
+
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.json
