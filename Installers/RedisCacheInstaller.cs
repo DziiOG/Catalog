@@ -22,10 +22,6 @@ namespace Catalog.Intallers
             );
             services.AddSingleton(connectionMultiplexer);
 
-            // services.AddStackExchangeRedisCache(
-            //     options => options.Configuration = redisCacheSettings.ConnectionString
-            // );
-
             services.AddSingleton<IRedisResponseCache, RedisResponseCache>();
         }
     }

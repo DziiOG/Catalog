@@ -39,6 +39,7 @@ namespace Catalog.Filters
         public void OnActionExecuting(ActionExecutingContext context)
         {
             UserInfo? userInfo = (UserInfo?)context.HttpContext.Items["LoggedInUser"];
+            Bot? bot = (Bot?)context.HttpContext.Items["BotAccess"];
             if (userInfo != null)
             {
                 bool hasAccess = userInfo.hasAccessToResource(roles);
@@ -47,6 +48,15 @@ namespace Catalog.Filters
                     context.ModelState.AddModelError("Forbidden", "Unauthorized access");
                     context.Result = new StatusCodeResult(403);
                 }
+            }
+            else if (bot != null)
+            {
+                return;
+            }
+            else
+            {
+                context.ModelState.AddModelError("Forbidden", "Unauthorized access");
+                context.Result = new StatusCodeResult(403);
             }
         }
     }

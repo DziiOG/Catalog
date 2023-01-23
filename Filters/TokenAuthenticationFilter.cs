@@ -6,6 +6,9 @@ using System.Security.Claims;
 using Catalog.Interfaces.Redis;
 using Newtonsoft.Json;
 using Catalog.Contracts;
+using System.Text;
+using Catalog.Settings;
+using Microsoft.Extensions.Primitives;
 
 namespace Catalog.Filters
 {
@@ -41,14 +44,7 @@ namespace Catalog.Filters
 
             if (!string.IsNullOrEmpty(authorizationString.Value))
             {
-                String auth = authorizationString.Value;
-                String[] spearator = { " " };
-                Int32 count = 2;
-                String[] authArrayItems = auth.Split(
-                    spearator,
-                    count,
-                    StringSplitOptions.RemoveEmptyEntries
-                );
+                string[] authArrayItems = GetSplittedAuthorizationString(authorizationString);
                 if (authArrayItems[0] == "Bearer")
                 {
                     ClaimsPrincipal? claimPrinciple;
@@ -74,10 +70,53 @@ namespace Catalog.Filters
                         return false;
                     }
                 }
-                else if (authArrayItems[0] == "x-bot-auth") { }
+                else if (authArrayItems[0] == "x-bot-auth")
+                {
+                    ResquestBotSettings? botSettings = (ResquestBotSettings?)
+                        context.HttpContext.RequestServices.GetService(typeof(ResquestBotSettings));
+                    byte[]? stringBytes = System.Convert.FromBase64String(authArrayItems[1]);
+                    string? decodedBytes = Encoding.Default.GetString(stringBytes);
+                    String[] spearator = { ":" };
+                    Int32 count = 2;
+                    String[] splittedByteCode = decodedBytes.Split(
+                        spearator,
+                        count,
+                        StringSplitOptions.RemoveEmptyEntries
+                    );
+                    if (
+                        botSettings != null
+                        && splittedByteCode[0] == botSettings.BotEmail
+                        && splittedByteCode[1] == botSettings.BotPassword
+                    )
+                    {
+                        Bot bot = new Bot()
+                        {
+                            BotEmail = botSettings.BotEmail,
+                            BotPassword = botSettings.BotPassword
+                        };
+                        context.HttpContext.Items.Add("BotAccess", bot);
+                        return true;
+                    }
+                    return false;
+                }
                 return false;
             }
             return false;
+        }
+
+        private static string[] GetSplittedAuthorizationString(
+            KeyValuePair<string, StringValues> authorizationString
+        )
+        {
+            String auth = authorizationString.Value;
+            String[] spearator = { " " };
+            Int32 count = 2;
+            var authArrayItems = auth.Split(
+                spearator,
+                count,
+                StringSplitOptions.RemoveEmptyEntries
+            );
+            return authArrayItems;
         }
     }
 }
