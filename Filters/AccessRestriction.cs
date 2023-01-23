@@ -2,6 +2,7 @@ using System.Net;
 using Catalog.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Catalog.Extensions;
 
 namespace Catalog.Filters
 {
@@ -33,18 +34,14 @@ namespace Catalog.Filters
             return result;
         }
 
-        public void OnActionExecuted(ActionExecutedContext context)
-        {
-            throw new NotImplementedException();
-        }
+        public void OnActionExecuted(ActionExecutedContext context) { }
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
             UserInfo? userInfo = (UserInfo?)context.HttpContext.Items["LoggedInUser"];
             if (userInfo != null)
             {
-                List<string> userRoles = userInfo.Roles;
-                bool hasAccess = Contains(userRoles, roles);
+                bool hasAccess = userInfo.hasAccessToResource(roles);
                 if (!hasAccess)
                 {
                     context.ModelState.AddModelError("Forbidden", "Unauthorized access");

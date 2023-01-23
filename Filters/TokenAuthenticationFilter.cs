@@ -74,6 +74,7 @@ namespace Catalog.Filters
                         return false;
                     }
                 }
+                else if (authArrayItems[0] == "x-bot-auth") { }
                 return false;
             }
             return false;
