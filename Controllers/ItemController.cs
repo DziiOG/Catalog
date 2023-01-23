@@ -33,6 +33,7 @@ namespace Catalog.Controllers
             IEnumerable<ItemDto>? items = (await repository.GetItemsAsync()).Select(
                 item => item.AsDto()
             );
+            UserInfo? b = (UserInfo?)HttpContext.Items["LoggedInUser"];
             return items;
         }
 

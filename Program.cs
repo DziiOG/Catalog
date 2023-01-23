@@ -1,4 +1,6 @@
+using System.Net;
 using Catalog.Extensions;
+using Microsoft.AspNetCore.Diagnostics;
 
 DotNetEnv.Env.Load();
 
@@ -17,6 +19,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseHttpLogging();
+
+app.UseExceptionHandler(options =>
+{
+    options.Run(async context =>
+    {
+        var exception = context.Features.Get<IExceptionHandlerFeature>();
+        if (exception != null)
+        {
+            await context.Response.WriteAsync(exception.Error.Message);
+        }
+    });
+});
 
 app.UseHttpsRedirection();
 

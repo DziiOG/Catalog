@@ -72,32 +72,41 @@ namespace Catalog.Filters
                 }
                 else if (authArrayItems[0] == "x-bot-auth")
                 {
-                    ResquestBotSettings? botSettings = (ResquestBotSettings?)
-                        context.HttpContext.RequestServices.GetService(typeof(ResquestBotSettings));
-                    byte[]? stringBytes = System.Convert.FromBase64String(authArrayItems[1]);
-                    string? decodedBytes = Encoding.Default.GetString(stringBytes);
-                    String[] spearator = { ":" };
-                    Int32 count = 2;
-                    String[] splittedByteCode = decodedBytes.Split(
-                        spearator,
-                        count,
-                        StringSplitOptions.RemoveEmptyEntries
-                    );
-                    if (
-                        botSettings != null
-                        && splittedByteCode[0] == botSettings.BotEmail
-                        && splittedByteCode[1] == botSettings.BotPassword
-                    )
+                    try
                     {
-                        Bot bot = new Bot()
+                        ResquestBotSettings? botSettings = (ResquestBotSettings?)
+                            context.HttpContext.RequestServices.GetService(
+                                typeof(ResquestBotSettings)
+                            );
+                        byte[]? stringBytes = System.Convert.FromBase64String(authArrayItems[1]);
+                        string? decodedBytes = Encoding.Default.GetString(stringBytes);
+                        String[] spearator = { ":" };
+                        Int32 count = 2;
+                        String[] splittedByteCode = decodedBytes.Split(
+                            spearator,
+                            count,
+                            StringSplitOptions.RemoveEmptyEntries
+                        );
+                        if (
+                            botSettings != null
+                            && splittedByteCode[0] == botSettings.BotEmail
+                            && splittedByteCode[1] == botSettings.BotPassword
+                        )
                         {
-                            BotEmail = botSettings.BotEmail,
-                            BotPassword = botSettings.BotPassword
-                        };
-                        context.HttpContext.Items.Add("BotAccess", bot);
-                        return true;
+                            Bot bot = new Bot()
+                            {
+                                BotEmail = botSettings.BotEmail,
+                                BotPassword = botSettings.BotPassword
+                            };
+                            context.HttpContext.Items.Add("BotAccess", bot);
+                            return true;
+                        }
+                        return false;
                     }
-                    return false;
+                    catch (System.Exception)
+                    {
+                        return false;
+                    }
                 }
                 return false;
             }
