@@ -6,6 +6,7 @@ using Catalog.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Localization;
 
 namespace Catalog.Filters
 {
@@ -14,6 +15,9 @@ namespace Catalog.Filters
     {
         private readonly List<FileFieldAndContentType> _fieldValidations =
             new List<FileFieldAndContentType>();
+
+        private IDictionary<string, List<string>> uploadedFilesLocations =
+            new Dictionary<string, List<string>>();
 
         public FileUploader(string[] fieldValidations)
         {
@@ -30,7 +34,6 @@ namespace Catalog.Filters
                     string key = splittedElement[0];
                     string contentType = splittedElement[1];
                     string bucketName = splittedElement[2];
-                    Console.WriteLine($"{key}");
                     FileFieldAndContentType obj = new FileFieldAndContentType()
                     {
                         ContentType = contentType,
@@ -68,16 +71,12 @@ namespace Catalog.Filters
                         // get field content
                         try
                         {
-                            Console.WriteLine(_fieldValidations.Count);
                             _fieldValidations.Select(x =>
                             {
-                                Console.WriteLine(x.FileFIeld);
                                 return x;
                             });
                             int fileContentTypeIndex = _fieldValidations.FindIndex(element =>
                             {
-                                Console.WriteLine($"{element.FileFIeld} {fieldKey}");
-
                                 return element.FileFIeld == fieldKey;
                             });
 
@@ -129,11 +128,29 @@ namespace Catalog.Filters
 
                                 if (isValidFileMime)
                                 {
-                                    var result = await _serviceStorage.UploadFileAsync(
+                                    S3Response? result = await _serviceStorage.UploadFileAsync(
                                         s3Obj,
                                         _awsCrendentials,
                                         contentType
                                     );
+                                    List<string>? fieldKeyUploadedFiles;
+                                    if (
+                                        !uploadedFilesLocations.TryGetValue(
+                                            fieldKey,
+                                            out fieldKeyUploadedFiles
+                                        )
+                                    )
+                                    {
+                                        uploadedFilesLocations.Add(
+                                            fieldKey,
+                                            new List<string>() { result.Url }
+                                        );
+                                    }
+                                    else
+                                    {
+                                        fieldKeyUploadedFiles!.Add(result.Url);
+                                        uploadedFilesLocations[fieldKey] = fieldKeyUploadedFiles;
+                                    }
                                 }
                                 else
                                 {
@@ -175,6 +192,7 @@ namespace Catalog.Filters
                     }
                     if (!error)
                     {
+                        context.HttpContext.Items.Add("UploadedFiles", uploadedFilesLocations);
                         await next();
                     }
                     context.Result = new BadRequestObjectResult(context.ModelState);

@@ -74,6 +74,18 @@ namespace Catalog.Controllers
         )]
         public ActionResult UploadDummyFile([FromForm] IFormCollection form)
         {
+            IDictionary<string, List<string>>? files = (IDictionary<string, List<string>>?)
+                HttpContext.Items["UploadedFiles"];
+
+            Console.WriteLine(files.ToString());
+            foreach (KeyValuePair<string, List<string>> kvp in files)
+            {
+                foreach (var item in kvp.Value)
+                {
+                    Console.WriteLine(item);
+                }
+            }
+
             return Ok("success");
         }
 
