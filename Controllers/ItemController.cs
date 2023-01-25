@@ -28,18 +28,24 @@ namespace Catalog.Controllers
         [HttpGet]
         [RedisCached(duration: 60)]
         [AccessRestriction(new string[] { "GROWER" })]
-        public async Task<IEnumerable<ItemDto>> GetItemsAsync()
+        public async Task<Response<IEnumerable<ItemDto>?>?> GetItemsAsync()
         {
             IEnumerable<ItemDto>? items = (await repository.GetItemsAsync()).Select(
                 item => item.AsDto()
             );
             UserInfo? b = (UserInfo?)HttpContext.Items["LoggedInUser"];
-            return items;
+            Response<IEnumerable<ItemDto>?>? response = new Response<IEnumerable<ItemDto>?>()
+            {
+                data = items,
+                statusCode = 200,
+                message = "Items fetched successfully"
+            };
+            return response;
         }
 
         // GET /items/{id}
         [HttpGet(ApiRoutes.CatalogRoutes.ById)]
-        public async Task<ActionResult<ItemDto>> GetItemAsync(Guid id)
+        public async Task<ActionResult<Response<ItemDto>>> GetItemAsync(Guid id)
         {
             Item? item = await repository.GetItemAsync(id);
 
@@ -48,7 +54,27 @@ namespace Catalog.Controllers
                 return NotFound();
             }
 
-            return Ok(item.AsDto());
+            return Ok(
+                new Response<ItemDto>()
+                {
+                    data = item.AsDto(),
+                    statusCode = 200,
+                    message = "Items fetched successfully"
+                }
+            );
+        }
+
+        [HttpPost("files")]
+        [FileUploader(
+            new string[]
+            {
+                "receipt:image/png, image/jpg, image/jpeg:completefarmer/app/test",
+                "receipt2:image/png, image/jpg, image/jpeg:completefarmer/app/test"
+            }
+        )]
+        public ActionResult UploadDummyFile([FromForm] IFormCollection form)
+        {
+            return Ok("success");
         }
 
         // POST /items

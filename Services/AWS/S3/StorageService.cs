@@ -11,7 +11,8 @@ namespace Catalog.Services.AWS.S3
     {
         public async Task<S3Response> UploadFileAsync(
             S3Object s3obj,
-            AmazonClientSettings awsCredentials
+            AmazonClientSettings awsCredentials,
+            string ContentType
         )
         {
             var credentials = new BasicAWSCredentials(
@@ -31,15 +32,27 @@ namespace Catalog.Services.AWS.S3
                     Key = s3obj.Name,
                     BucketName = s3obj.BucketName,
                     CannedACL = S3CannedACL.NoACL,
+                    ContentType = ContentType
                 };
-                using var client = new AmazonS3Client(credentials, config);
 
-                var transferUtility = new TransferUtility(client);
+                using AmazonS3Client? client = new AmazonS3Client(credentials, config);
+
+                TransferUtility? transferUtility = new TransferUtility(client);
 
                 await transferUtility.UploadAsync(uploadRequest);
 
-                response.StatusCode = 200;
+                var nowWOrk = response.StatusCode = 200;
+                String[] spearator = { "completefarmer" };
+                Int32 count = 2;
+                String[] splittedElementArray = s3obj.BucketName.Split(
+                    spearator,
+                    count,
+                    StringSplitOptions.RemoveEmptyEntries
+                );
                 response.Message = $"{s3obj.Name} has been uploaded successfully";
+                response.Url =
+                    $"https://completefarmer.s3.{awsCredentials.region}.amazonaws.com{splittedElementArray[0]}/"
+                    + s3obj.Name;
             }
             catch (AmazonS3Exception ex)
             {

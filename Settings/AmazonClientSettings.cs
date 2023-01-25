@@ -4,5 +4,6 @@ namespace Catalog.Settings
     {
         public string accessKeyId { get; set; } = string.Empty;
         public string secretAccessKey { get; set; } = string.Empty;
+        public string region { get; set; } = string.Empty;
     }
 }

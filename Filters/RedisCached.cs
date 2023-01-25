@@ -34,7 +34,7 @@ namespace Catalog.Filters
             IRedisResponseCache? cacheService =
                 context.HttpContext.RequestServices.GetRequiredService<IRedisResponseCache>();
 
-            var cacheKey = GenerateCacheKeyFromRequest(context.HttpContext.Request);
+            string cacheKey = GenerateCacheKeyFromRequest(context.HttpContext.Request);
 
             // var cachedResponse = await cacheService.GetCachedResponseAsync(cacheKey);
 
